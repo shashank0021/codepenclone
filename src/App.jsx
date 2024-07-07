@@ -1,10 +1,12 @@
 import React, { useEffect , useState } from 'react'
+
 import { Home, Newproject, Spinner } from './components'
 import { Navigate, Route, Routes, useNavigate} from 'react-router-dom'
 import { auth, db } from './fierbase/firebase'
-import { doc, setDoc } from 'firebase/firestore'
+import { collection, doc, onSnapshot, orderBy, query, setDoc } from 'firebase/firestore'
 import { useDispatch } from 'react-redux'
 import { SET_USER } from './context/actions/useraction'
+import { SET_PROJECT } from './context/actions/projectaction'
 
 
 function App() {
@@ -16,7 +18,6 @@ function App() {
    useEffect(()=>{
     const unsubscribe = auth.onAuthStateChanged((userCred)=>{
       if(userCred){
-        console.log(userCred?.providerData[0])
         setDoc(doc(db,"users",userCred?.uid) , userCred?.providerData[0]).
         then(()=>{
           dispatch(SET_USER(userCred?.providerData[0]))
@@ -34,6 +35,19 @@ function App() {
 
     return ()=> unsubscribe()
    },[])
+
+
+   useEffect(() => {
+     const projectQuery = query(collection(db, "projects"),orderBy("id" , "desc"))
+     const unsubscribe = onSnapshot(projectQuery,(querysnaps) =>{
+      const projectlist = querysnaps.docs.map((doc)=>doc.data())
+      dispatch(SET_PROJECT(projectlist))
+     })
+     return unsubscribe
+   
+    
+   }, [])
+   
 
 
 
